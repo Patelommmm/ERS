@@ -1,9 +1,13 @@
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 
 const morgan = require('morgan');
 
 const bodyParser = require('body-parser');
+
+const mongoose = require('mongoose');
 
 app.use(morgan('dev'));
 
@@ -24,6 +28,16 @@ app.use((req, res, next) => {
 });
 
 const productRoutes = require('./api/routes/products');
+
+mongoose.connect('mongodb+srv://admin:'+ 
+    process.env.MONGO_ATLAS_PW +
+    '@omclusterforlearning.du4qd.mongodb.net/')
+    .then(() => {
+        console.log('Connected to MongoDB ');
+    })
+    .catch(err => {
+        console.error('Connection failed:', err);
+    });
 
 //routes   
 app.use('/products', productRoutes);

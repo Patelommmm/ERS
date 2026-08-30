@@ -5,9 +5,32 @@ const mongoose = require('mongoose');
 const Product = require('../models/product');
 
 router.get('/', (req, res, next) => {
-    res.status(200).json({
-        message: 'Handling GET'
-    });
+    Product.find()
+        .select("name price _id")
+        .exec()
+        .then(docs => {
+            const response = {
+                count: docs.length,
+                products: docs.map(doc => {
+                    return {
+                        name: doc.name,
+                        price: doc.price,
+                        _id: doc._id,
+                        request: {
+                            type: "GET",
+                            url: "http://localhost:3000/products/" + doc._id
+                        }
+                    };
+                })
+            };
+            res.status(200).json(response);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
+        });
 });
 
 router.post('/', (req, res, next) => {
@@ -29,7 +52,15 @@ router.post('/', (req, res, next) => {
     ).catch(err => console.log(err));
     res.status(200).json({
         message: 'Handling POST',
-        createdProduct: product
+        createdProduct: {
+            name: product.name,
+            price: product.price,
+            _id: product._id,
+            request: {
+                type: 'GET',
+                url: "http://localhost:3000/products/" + product._id
+            }
+        }
     });
 });
 

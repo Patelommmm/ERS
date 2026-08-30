@@ -25,8 +25,10 @@ router.post('/signup', (req, res, next) => {
                     else {
                         const user = new User({
                             _id: new mongoose.Types.ObjectId(),
+                            name: req.body.name,
                             email: req.body.email,
-                            password: hash
+                            password: hash,
+                            role: req.body.role
                         });
                         user.save()
                             .then(result => {
@@ -78,7 +80,8 @@ router.post('/login', (req, res, next) => {
                     const token = jwt.sign(
                         {
                             email: user[0].email,
-                            userId: user[0]._id
+                            userId: user[0]._id,
+                            role: user[0].role
                         },
                         process.env.JWT_KEY,
                         {

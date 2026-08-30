@@ -84,7 +84,12 @@ router.patch('/:productId', (req, res, next) => {
     Product.findByIdAndUpdate(id, { $set: req.body }, { new: true }).exec().then(doc => {
         console.log("From database", doc);
         res.status(200).json({
+            message: 'Product updated!',
             product: doc
+            request: {
+                type: 'GET',
+                url: "http://localhost:3000/products/" + doc._id
+            }
         });
     }).catch(err => {
         console.log(err);

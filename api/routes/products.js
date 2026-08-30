@@ -6,7 +6,7 @@ const Product = require('../models/product');
 
 router.get('/', (req, res, next) => {
     Product.find()
-        .select("name price _id")
+        .select("name price category availability schedule description _id")
         .exec()
         .then(docs => {
             const response = {
@@ -15,6 +15,10 @@ router.get('/', (req, res, next) => {
                     return {
                         name: doc.name,
                         price: doc.price,
+                        category: doc.category,
+                        availability: doc.availability,
+                        schedule: doc.schedule,
+                        description: doc.description,
                         _id: doc._id,
                         request: {
                             type: "GET",
@@ -42,8 +46,13 @@ router.post('/', (req, res, next) => {
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
-        price: req.body.price
-        
+        price: req.body.price,
+        description: req.body.description,
+        category: req.body.category,
+        keyFeatures: req.body.keyFeatures,
+        schedule: req.body.schedule,
+        availability: req.body.availability,
+        ownerId: req.body.ownerId       
     });
     product.save().then(
         result => {
@@ -85,7 +94,7 @@ router.patch('/:productId', (req, res, next) => {
         console.log("From database", doc);
         res.status(200).json({
             message: 'Product updated!',
-            product: doc
+            product: doc,
             request: {
                 type: 'GET',
                 url: "http://localhost:3000/products/" + doc._id
@@ -101,7 +110,7 @@ router.patch('/:productId', (req, res, next) => {
 
 router.delete('/:productId', (req, res, next) => {
     const id = req.params.productId;
-    Product.findByIdAndRemove(id).exec().then(doc => {
+    Product.findByIdAndDelete(id).exec().then(doc => {
         console.log("From database", doc);
         res.status(200).json({
             message: 'Product deleted!',

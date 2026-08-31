@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Equipment Manager</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="app">
+<header class="topbar">
+    <img src="asset/logo.svg" alt="logo" class="logo-img">
+    <span class="brand">ERS Rentals</span>
+    <button id="logoutBtn" class="link-btn">Logout</button>
+</header>
+
+<main class="content">
+    <div class="listing-head">
+        <h2 id="listTitle">All Listings</h2>
+        <button id="addBtn" class="add-btn" hidden>+</button>
+    </div>
+    <div id="productList" class="product-list">
+        <p>Loading...</p>
+    </div>
+</main>
+
+<div id="formModal" class="modal" hidden>
+    <form id="productForm" class="card">
+        <h1 id="formTitle">Add Equipment</h1>
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="number" name="price" placeholder="Price per period" required min="0">
+        <input type="text" name="description" placeholder="Description" required minlength="10">
+        <input type="text" name="category" placeholder="Category" required>
+        <input type="text" name="keyFeatures" placeholder="Key Features">
+        <select name="schedule" required>
+            <option value="" disabled selected>Rental Schedule</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+        </select>
+        <button type="submit">Save</button>
+        <p><a href="#" id="cancelForm">Cancel</a></p>
+    </form>
+</div>
+
+<script src="auth.js"></script>
+<script src="equipment.js"></script>
+</body>
+</html>

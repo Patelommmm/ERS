@@ -14,7 +14,7 @@ function requireAuth() {
     const payload = isAuthed();
     if (!payload) {
         localStorage.removeItem('token');
-        window.location.replace('login.html');
+        window.location.replace('index.html');
         return null;
     }
     return payload;
@@ -73,7 +73,7 @@ document.getElementById('signupForm')?.addEventListener('submit', async e => {
         const data = await res.json();
         if (res.ok) {
             alert('Account created! Please log in.');
-            window.location.replace('login.html');
+            window.location.replace('index.html');
         } else {
             alert(data.message || 'Signup failed');
         }

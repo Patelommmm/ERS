@@ -11,7 +11,7 @@ let editingId = null;
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('token');
-    window.location.replace('login.html');
+    window.location.replace('index.html');
 });
 
 if (isHolder) {
@@ -58,11 +58,10 @@ form.addEventListener('submit', async e => {
     };
     if (!editingId) {
         body.availability = true;
-        body.ownerId = payload.userId;
     }
-    await withBuffer(btn, async () => {
+    await buffer(btn, async () => {
         const url = editingId ? `${API}/products/${editingId}` : `${API}/products`;
-        const res = await fetch(url, {
+        const res = await apiFetch(url, {
             method: editingId ? 'PATCH' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -78,7 +77,7 @@ form.addEventListener('submit', async e => {
 });
 
 async function toggleAvailability(id, current) {
-    await fetch(`${API}/products/${id}`, {
+    await apiFetch(`${API}/products/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availability: !current })
@@ -88,12 +87,12 @@ async function toggleAvailability(id, current) {
 
 async function deleteProduct(id) {
     if (!confirm('Delete this equipment?')) return;
-    await fetch(`${API}/products/${id}`, { method: 'DELETE' });
+    await apiFetch(`${API}/products/${id}`, { method: 'DELETE' });
     loadProducts();
 }
 
 async function loadProducts() {
-    const res = await fetch(`${API}/products/`);
+    const res = await apiFetch(`${API}/products/`);
     const data = await res.json();
     let products = data.products || [];
     if (isHolder) products = products.filter(p => String(p.ownerId) === String(payload.userId));

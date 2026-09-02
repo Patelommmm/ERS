@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-//importing json models from models folder
 const Product = require('../models/product');
+const checkAuth = require('../middleware/check-auth');
 
-router.get('/', (req, res, next) => {
+router.get('/', checkAuth, (req, res, next) => {
     Product.find()
-        .select("name price category availability schedule description _id")
+        .select("name price category availability schedule description keyFeatures ownerId _id")
         .exec()
         .then(docs => {
             const response = {
@@ -19,6 +19,8 @@ router.get('/', (req, res, next) => {
                         availability: doc.availability,
                         schedule: doc.schedule,
                         description: doc.description,
+                        keyFeatures: doc.keyFeatures,
+                        ownerId: doc.ownerId,
                         _id: doc._id,
                         request: {
                             type: "GET",
@@ -37,12 +39,12 @@ router.get('/', (req, res, next) => {
         });
 });
 
-router.post('/', (req, res, next) => {
-    /*const product = {
-        name: req.body.name,
-        price: req.body.price
-    };*/
-    //creating new model using constructer
+router.post('/', checkAuth, (req, res, next) => {
+    if (req.userData.role !== 'Holder') {
+        return res.status(403).json({
+            message: 'Only Holders can list equipment'
+        });
+    }
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
@@ -52,31 +54,36 @@ router.post('/', (req, res, next) => {
         keyFeatures: req.body.keyFeatures,
         schedule: req.body.schedule,
         availability: req.body.availability,
-        ownerId: req.body.ownerId       
+        ownerId: req.userData.userId 
     });
-    product.save().then(
-        result => {
+    product.save()
+        .then(result => {
             console.log(result);
-        }
-    ).catch(err => console.log(err));
-    res.status(200).json({
-        message: 'Handling POST',
-        createdProduct: {
-            name: product.name,
-            price: product.price,
-            _id: product._id,
-            request: {
-                type: 'GET',
-                url: "http://localhost:3000/products/" + product._id
-            }
-        }
-    });
+            res.status(201).json({
+                message: 'Handling POST',
+                createdProduct: {
+                    name: result.name,
+                    price: result.price,
+                    _id: result._id,
+                    request: {
+                        type: 'GET',
+                        url: "http://localhost:3000/products/" + result._id
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
+        });
 });
 
-router.get('/:productId', (req, res, next) => {
+router.get('/:productId', checkAuth, (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id).exec().then(doc => {
-        console.log("From database", doc);  
+        console.log("From database", doc);
         res.status(200).json({
             product: doc
         });
@@ -88,17 +95,33 @@ router.get('/:productId', (req, res, next) => {
     });
 });
 
-router.patch('/:productId', (req, res, next) => {
+router.patch('/:productId', checkAuth, (req, res, next) => {
     const id = req.params.productId;
-    Product.findByIdAndUpdate(id, { $set: req.body }, { new: true }).exec().then(doc => {
-        console.log("From database", doc);
-        res.status(200).json({
-            message: 'Product updated!',
-            product: doc,
-            request: {
-                type: 'GET',
-                url: "http://localhost:3000/products/" + doc._id
-            }
+    Product.findById(id).exec().then(product => {
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        if (String(product.ownerId) !== String(req.userData.userId)) {
+            return res.status(403).json({ message: 'Not your listing' });
+        }
+        const updates = { ...req.body };
+        delete updates.ownerId; 
+
+        Product.findByIdAndUpdate(id, { $set: updates }, { new: true }).exec().then(doc => {
+            console.log("From database", doc);
+            res.status(200).json({
+                message: 'Product updated!',
+                product: doc,
+                request: {
+                    type: 'GET',
+                    url: "http://localhost:3000/products/" + doc._id
+                }
+            });
+        }).catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
         });
     }).catch(err => {
         console.log(err);
@@ -108,13 +131,26 @@ router.patch('/:productId', (req, res, next) => {
     });
 });
 
-router.delete('/:productId', (req, res, next) => {
+router.delete('/:productId', checkAuth, (req, res, next) => {
     const id = req.params.productId;
-    Product.findByIdAndDelete(id).exec().then(doc => {
-        console.log("From database", doc);
-        res.status(200).json({
-            message: 'Product deleted!',
-            product: doc
+    Product.findById(id).exec().then(product => {
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        if (String(product.ownerId) !== String(req.userData.userId)) {
+            return res.status(403).json({ message: 'Not your listing' });
+        }
+        Product.findByIdAndDelete(id).exec().then(doc => {
+            console.log("From database", doc);
+            res.status(200).json({
+                message: 'Product deleted!',
+                product: doc
+            });
+        }).catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
         });
     }).catch(err => {
         console.log(err);

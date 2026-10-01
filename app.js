@@ -9,6 +9,9 @@ const bodyParser = require('body-parser');
 
 const mongoose = require('mongoose');
 
+const path = require('path');
+const os = require('os');
+
 app.use(morgan('dev'));
 
 app.use(bodyParser.urlencoded({extended: false}));
@@ -41,6 +44,16 @@ mongoose.connect('mongodb+srv://admin:'+
     });
 
 //routes   
+// frontend pages and files (only these are public, so .env and app.js stay hidden)
+const frontendFiles = ['index.html', 'signup.html', 'welcome.html', 'auth.js', 'equipment.js', 'style.css'];
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+frontendFiles.forEach(file => {
+    app.get('/' + file, (req, res) => res.sendFile(path.join(__dirname, file)));
+});
+app.use('/asset', express.static(path.join(__dirname, 'asset')));
+
+// health check (used later by the load balancer)
+app.get('/health', (req, res) => res.json({ status: 'ok', host: os.hostname() }));
 app.use('/products', productRoutes);
 app.use('/user', userRoutes);
 

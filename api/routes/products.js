@@ -24,7 +24,7 @@ router.get('/', checkAuth, (req, res, next) => {
                         _id: doc._id,
                         request: {
                             type: "GET",
-                            url: "http://localhost:3000/products/" + doc._id
+                            url: req.protocol + "://" + req.get("host") + "/products/" + doc._id
                         }
                     };
                 })
@@ -67,7 +67,7 @@ router.post('/', checkAuth, (req, res, next) => {
                     _id: result._id,
                     request: {
                         type: 'GET',
-                        url: "http://localhost:3000/products/" + result._id
+                        url: req.protocol + "://" + req.get("host") + "/products/" + result._id
                     }
                 }
             });
@@ -114,7 +114,7 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
                 product: doc,
                 request: {
                     type: 'GET',
-                    url: "http://localhost:3000/products/" + doc._id
+                    url: req.protocol + "://" + req.get("host") + "/products/" + doc._id
                 }
             });
         }).catch(err => {

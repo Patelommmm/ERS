@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = '';
 
 function decodeToken(token) {
     try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; }

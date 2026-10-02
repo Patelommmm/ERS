@@ -1,10 +1,7 @@
-const express = require('express');
-const router = express.Router();
 const mongoose = require('mongoose');
-const Product = require('../models/product');
-const checkAuth = require('../middleware/check-auth');
+const Product = require('./product.model');
 
-router.get('/', checkAuth, (req, res, next) => {
+exports.getAllProducts = (req, res, next) => {
     Product.find()
         .select("name price category availability schedule description keyFeatures ownerId _id")
         .exec()
@@ -37,9 +34,9 @@ router.get('/', checkAuth, (req, res, next) => {
                 error: err
             });
         });
-});
+};
 
-router.post('/', checkAuth, (req, res, next) => {
+exports.createProduct = (req, res, next) => {
     if (req.userData.role !== 'Holder') {
         return res.status(403).json({
             message: 'Only Holders can list equipment'
@@ -54,7 +51,7 @@ router.post('/', checkAuth, (req, res, next) => {
         keyFeatures: req.body.keyFeatures,
         schedule: req.body.schedule,
         availability: req.body.availability,
-        ownerId: req.userData.userId 
+        ownerId: req.userData.userId
     });
     product.save()
         .then(result => {
@@ -78,9 +75,9 @@ router.post('/', checkAuth, (req, res, next) => {
                 error: err
             });
         });
-});
+};
 
-router.get('/:productId', checkAuth, (req, res, next) => {
+exports.getProduct = (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id).exec().then(doc => {
         console.log("From database", doc);
@@ -93,9 +90,9 @@ router.get('/:productId', checkAuth, (req, res, next) => {
             error: err
         });
     });
-});
+};
 
-router.patch('/:productId', checkAuth, (req, res, next) => {
+exports.updateProduct = (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id).exec().then(product => {
         if (!product) {
@@ -105,7 +102,7 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
             return res.status(403).json({ message: 'Not your listing' });
         }
         const updates = { ...req.body };
-        delete updates.ownerId; 
+        delete updates.ownerId;
 
         Product.findByIdAndUpdate(id, { $set: updates }, { new: true }).exec().then(doc => {
             console.log("From database", doc);
@@ -129,9 +126,9 @@ router.patch('/:productId', checkAuth, (req, res, next) => {
             error: err
         });
     });
-});
+};
 
-router.delete('/:productId', checkAuth, (req, res, next) => {
+exports.deleteProduct = (req, res, next) => {
     const id = req.params.productId;
     Product.findById(id).exec().then(product => {
         if (!product) {
@@ -158,6 +155,4 @@ router.delete('/:productId', checkAuth, (req, res, next) => {
             error: err
         });
     });
-});
-
-module.exports = router;
+};

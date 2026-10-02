@@ -30,8 +30,8 @@ app.use((req, res, next) => {
     next();
 });
 
-const productRoutes = require('./api/routes/products');
-const userRoutes = require('./api/routes/user');
+const productRoutes = require('./api/modules/products/product.routes');
+const userRoutes = require('./api/modules/user/user.routes');
 
 mongoose.connect('mongodb+srv://admin:'+ 
     process.env.MONGO_ATLAS_PW +
@@ -44,13 +44,8 @@ mongoose.connect('mongodb+srv://admin:'+
     });
 
 //routes   
-// frontend pages and files (only these are public, so .env and app.js stay hidden)
-const frontendFiles = ['index.html', 'signup.html', 'welcome.html', 'auth.js', 'equipment.js', 'style.css'];
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-frontendFiles.forEach(file => {
-    app.get('/' + file, (req, res) => res.sendFile(path.join(__dirname, file)));
-});
-app.use('/asset', express.static(path.join(__dirname, 'asset')));
+// frontend (only the frontend folder is public, so .env and app.js stay hidden)
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // health check (used later by the load balancer)
 app.get('/health', (req, res) => res.json({ status: 'ok', host: os.hostname() }));

@@ -1,39 +1,60 @@
-const payload = requireAuth();
-const isHolder = payload?.role === 'Holder';
-
-const listEl = document.getElementById('productList');
-const addBtn = document.getElementById('addBtn');
-const modal = document.getElementById('formModal');
-const form = document.getElementById('productForm');
-const formTitle = document.getElementById('formTitle');
-const listTitle = document.getElementById('listTitle');
 let editingId = null;
+let afterSave = () => {};
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.replace('index.html');
-});
+//add and edit popup form
+function ensureForm() {
+    let modal = document.getElementById('formModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'formModal';
+    modal.className = 'modal';
+    modal.hidden = true;
+    modal.innerHTML = `
+        <form id="productForm" class="card">
+            <h1 id="formTitle">Add Equipment</h1>
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="number" name="price" placeholder="Price per period" required min="0">
+            <input type="text" name="description" placeholder="Description" required minlength="10">
+            <select name="category" required></select>
+            <input type="text" name="keyFeatures" placeholder="Key Features">
+            <select name="schedule" required>
+                <option value="" disabled selected>Rental Schedule</option>
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Monthly">Monthly</option>
+            </select>
+            <button type="submit">Save</button>
+            <p><a href="#" id="cancelForm">Cancel</a></p>
+        </form>`;
+    document.body.appendChild(modal);
 
-if (isHolder) {
-    addBtn.hidden = false;
-    listTitle.textContent = 'My Listings';
+    modal.querySelector('#cancelForm').addEventListener('click', e => {
+        e.preventDefault();
+        closeForm();
+    });
+    modal.querySelector('form').addEventListener('submit', saveForm);
+    return modal;
 }
 
-addBtn?.addEventListener('click', () => openForm());
-document.getElementById('cancelForm').addEventListener('click', e => {
-    e.preventDefault();
-    closeForm();
-});
+function fillCategorySelect(select, current) {
+    const options = categoryOptions(current ? [{ category: current }] : []);
+    select.innerHTML = '<option value="" disabled selected>Category</option>' +
+        options.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if (current) select.value = options.find(c => sameText(c, current));
+}
 
-function openForm(product) {
+function openForm(product, onSaved) {
+    const modal = ensureForm();
+    const form = modal.querySelector('form');
     editingId = product?._id || null;
-    formTitle.textContent = editingId ? 'Edit Equipment' : 'Add Equipment';
+    afterSave = onSaved || (() => {});
+    modal.querySelector('#formTitle').textContent = editingId ? 'Edit Equipment' : 'Add Equipment';
     form.reset();
+    fillCategorySelect(form.category, product?.category);
     if (product) {
         form.name.value = product.name;
         form.price.value = product.price;
         form.description.value = product.description;
-        form.category.value = product.category;
         form.keyFeatures.value = product.keyFeatures || '';
         form.schedule.value = product.schedule;
     }
@@ -41,12 +62,14 @@ function openForm(product) {
 }
 
 function closeForm() {
-    modal.hidden = true;
+    ensureForm().hidden = true;
     editingId = null;
 }
 
-form.addEventListener('submit', async e => {
+// Add new or update it when editing
+async function saveForm(e) {
     e.preventDefault();
+    const form = e.target;
     const btn = form.querySelector('button[type="submit"]');
     const body = {
         name: form.name.value,
@@ -69,12 +92,12 @@ form.addEventListener('submit', async e => {
         const data = await res.json();
         if (res.ok) {
             closeForm();
-            loadProducts();
+            afterSave();
         } else {
             alert(data.message || 'Save failed');
         }
     });
-});
+}
 
 async function toggleAvailability(id, current) {
     await apiFetch(`${API}/products/${id}`, {
@@ -82,65 +105,34 @@ async function toggleAvailability(id, current) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availability: !current })
     });
-    loadProducts();
 }
 
 async function deleteProduct(id) {
-    if (!confirm('Delete this equipment?')) return;
-    await apiFetch(`${API}/products/${id}`, { method: 'DELETE' });
-    loadProducts();
+    if (!confirm('Delete this equipment?')) return false;
+    const res = await apiFetch(`${API}/products/${id}`, { method: 'DELETE' });
+    return res.ok;
 }
 
-async function loadProducts() {
-    const res = await apiFetch(`${API}/products/`);
-    const data = await res.json();
-    let products = data.products || [];
-    if (isHolder) products = products.filter(p => String(p.ownerId) === String(payload.userId));
-    renderList(products);
+// Toggle, edit and delete buttons
+function manageActionsHtml(p) {
+    return `
+        <div class="actions">
+            <label class="switch" title="Availability">
+                <input type="checkbox" ${p.availability ? 'checked' : ''} aria-label="Available">
+                <span class="slider"></span>
+            </label>
+            <button class="icon-btn edit" title="Edit">&#9998;</button>
+            <button class="icon-btn delete" title="Delete">&#128465;</button>
+        </div>`;
 }
 
-function renderList(products) {
-    listEl.innerHTML = '';
-    if (!products.length) {
-        listEl.innerHTML = '<p>Not listed anything yet.</p>';
-        return;
-    }
-    products.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-            <img src="asset/logo.svg" class="thumb" alt="${p.name}">
-            <div class="info">
-                <h3>${p.name}</h3>
-                <p>${p.description}</p>
-                <p class="price">Starting at $${p.price}/${(p.schedule || '').toLowerCase()}</p>
-                <span class="pill">${p.category}</span>
-                <span class="status ${p.availability ? 'available' : 'unavailable'}"><span class="dot"></span>${p.availability ? 'Available' : 'Not Available'}</span>
-            </div>
-            ${isHolder ? `
-            <div class="actions">
-                <label class="switch">
-                    <input type="checkbox" ${p.availability ? 'checked' : ''} data-id="${p._id}" data-current="${p.availability}">
-                    <span class="slider"></span>
-                </label>
-                <button class="icon-btn edit" data-id="${p._id}">&#9998;</button>
-                <button class="icon-btn delete" data-id="${p._id}">&#128465;</button>
-            </div>` : ''}
-        `;
-        listEl.appendChild(card);
+function bindManageActions(root, product, onChanged = () => {}) {
+    root.querySelector('.switch input').addEventListener('change', async () => {
+        await toggleAvailability(product._id, product.availability);
+        onChanged('updated');
     });
-
-    if (isHolder) {
-        listEl.querySelectorAll('.switch input').forEach(input => {
-            input.addEventListener('change', () => toggleAvailability(input.dataset.id, input.dataset.current === 'true'));
-        });
-        listEl.querySelectorAll('.edit').forEach(btn => {
-            btn.addEventListener('click', () => openForm(products.find(p => p._id === btn.dataset.id)));
-        });
-        listEl.querySelectorAll('.delete').forEach(btn => {
-            btn.addEventListener('click', () => deleteProduct(btn.dataset.id));
-        });
-    }
+    root.querySelector('.edit').addEventListener('click', () => openForm(product, () => onChanged('updated')));
+    root.querySelector('.delete').addEventListener('click', async () => {
+        if (await deleteProduct(product._id)) onChanged('deleted');
+    });
 }
-
-loadProducts();

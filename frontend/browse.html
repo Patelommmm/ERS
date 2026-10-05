@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse Equipment</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app">
+<header class="topbar" id="topbar"></header>
+
+<main class="content">
+    <div class="listing-head">
+        <h2 id="listTitle">All Equipment</h2>
+        <button id="addBtn" class="add-btn" title="Add equipment" hidden>+</button>
+    </div>
+    <div id="tabs" class="tabs" hidden>
+        <button type="button" data-view="mine">My Listings</button>
+        <button type="button" data-view="all">All Equipment</button>
+    </div>
+    <div id="filters"></div>
+    <div id="productList" class="product-list">
+        <p>Loading...</p>
+    </div>
+</main>
+
+<footer class="footer" id="footer"></footer>
+
+<script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/listing.js"></script>
+<script src="js/equipment.js"></script>
+<script src="js/browse.js"></script>
+</body>
+</html>

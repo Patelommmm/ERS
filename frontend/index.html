@@ -2,17 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERS Rentals</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-<form id="login" class="card">
-    <h1>Login</h1>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
-</form>
+<body class="app">
+<header class="topbar" id="topbar"></header>
+
+<section class="hero">
+    <h1>Rent the equipment you need, from people who have it.</h1>
+    <p>Browse farming, industrial, moving and logistics equipment listed by local holders.</p>
+    <div class="hero-actions">
+        <a class="btn" href="browse.html">Browse equipment</a>
+        <a class="btn btn-outline" href="login.html" id="heroLogin">Login</a>
+    </div>
+</section>
+
+<main class="content">
+    <h2 class="section-title">Browse by category</h2>
+    <div id="categoryTiles" class="tiles"></div>
+
+    <h2 class="section-title">How it works</h2>
+    <div class="steps">
+        <div class="step">
+            <h3>Renter</h3>
+            <p>Browse and search all listed equipment, filter by category and open any item to see its full details.</p>
+        </div>
+        <div class="step">
+            <h3>Holder</h3>
+            <p>List your equipment with a price and rental schedule, edit it any time and switch its availability on or off.</p>
+        </div>
+    </div>
+</main>
+
+<footer class="footer" id="footer"></footer>
+
 <script src="js/auth.js"></script>
+<script src="js/components.js"></script>
+<script src="js/listing.js"></script>
+<script>
+    renderCategoryTiles(document.getElementById('categoryTiles'));
+    if (loggedIn()) document.getElementById('heroLogin').hidden = true;
+</script>
 </body>
 </html>

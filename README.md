@@ -16,7 +16,6 @@ Defines API endpoints:
 products.js - Product CRUD operations
 user.js - User authentication & management
 
-s
 Design Pattern
 MVC-like structure - Models define schemas, Routes handle HTTP requests
 CORS enabled - Allows cross-origin requests

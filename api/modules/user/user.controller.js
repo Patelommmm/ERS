@@ -3,103 +3,62 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('./user.model');
+const { ValidationError, UnauthorizedError, ConflictError } = require('../../errors');
 
-exports.signup = (req, res, next) => {
-    User.find({ email: req.body.email })
-        .exec()
-        .then(user => {
-            if (user.length >= 1) {
-                return res.status(409).json({
-                    message: 'Mail exists'
-                });
-            }
-            else {
-                bcrypt.hash(req.body.password, 10, (err, hash) => {
-                    if (err) {
-                        return res.status(500).json({
-                            error: err
-                        });
-                    }
-                    else {
-                        const user = new User({
-                            _id: new mongoose.Types.ObjectId(),
-                            name: req.body.name,
-                            email: req.body.email,
-                            password: hash,
-                            role: req.body.role
-                        });
-                        user.save()
-                            .then(result => {
-                                console.log(result);
-                                res.status(201).json({
-                                    message: 'User created!',
-                                    user: result
-                                });
-                            })
-                            .catch(err => {
-                                if (err.code === 11000) {
-                                    return res.status(409).json({
-                                        message: 'Mail exists'
-                                    });
-                                }
-                                console.log(err);
-                                res.status(500).json({
-                                    error: err
-                                });
-                            });
-                    }
-                });
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({
-                error: err
-            });
-        });
+exports.signup = async (req, res) => {
+    const existing = await User.findOne({ email: req.body.email }).exec();
+    if (existing) {
+        throw new ConflictError('Email already exists, try with a new one', 'EMAIL_EXISTS');
+    }
+    if (!req.body.password) {
+        throw new ValidationError({ password: 'Password is required' });
+    }
+    const hash = await bcrypt.hash(req.body.password, 10);
+    const user = new User({
+        _id: new mongoose.Types.ObjectId(),
+        name: req.body.name,
+        email: req.body.email,
+        password: hash,
+        role: req.body.role
+    });
+    // missing fields and duplicate email are handled in error-handler.js
+    const result = await user.save();
+    console.log(result);
+    res.status(201).json({
+        message: 'User created!',
+        user: result
+    });
 };
 
-exports.login = (req, res, next) => {
-    User.find({ email: req.body.email })
-        .exec()
-        .then(user => {
-            if (user.length < 1) {
-                return res.status(401).json({
-                    message: 'Auth failed'
-                });
-            }
-            bcrypt.compare(req.body.password, user[0].password, (err, result) => {
-                if (err) {
-                    return res.status(401).json({
-                        message: 'Auth failed'
-                    });
-                }
-                if (result) {
-                    const token = jwt.sign(
-                        {
-                            email: user[0].email,
-                            userId: user[0]._id,
-                            role: user[0].role
-                        },
-                        process.env.JWT_KEY,
-                        {
-                            expiresIn: "8760h"
-                        }
-                    );
-                    return res.status(200).json({
-                        message: 'Auth successful',
-                        token: token
-                    });
-                }
-                res.status(401).json({
-                    message: 'Auth failed'
-                });
-            });
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({
-                error: err
-            });
-        });
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        const details = {};
+        if (!email) details.email = 'Email is required';
+        if (!password) details.password = 'Password is required';
+        throw new ValidationError(details);
+    }
+    const user = await User.findOne({ email }).exec();
+    if (!user) {
+        throw new UnauthorizedError('No account found with this email', 'EMAIL_NOT_FOUND');
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+        throw new UnauthorizedError('Incorrect password, please try again', 'WRONG_PASSWORD');
+    }
+    const token = jwt.sign(
+        {
+            email: user.email,
+            userId: user._id,
+            role: user.role
+        },
+        process.env.JWT_KEY,
+        {
+            expiresIn: "8760h"
+        }
+    );
+    res.status(200).json({
+        message: 'Auth successful',
+        token: token
+    });
 };

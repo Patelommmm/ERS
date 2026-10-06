@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 
 const productRoutes = require('./api/modules/products/product.routes');
 const userRoutes = require('./api/modules/user/user.routes');
+const bookingRoutes = require('./api/modules/bookings/booking.routes');
 const { notFound, errorHandler } = require('./api/middleware/error-handler');
 
 mongoose.connect('mongodb+srv://admin:'+ 
@@ -52,7 +53,7 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 app.get('/health', (req, res) => res.json({ status: 'ok', host: os.hostname() }));
 app.use('/products', productRoutes);
 app.use('/user', userRoutes);
-
+app.use('/bookings', bookingRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

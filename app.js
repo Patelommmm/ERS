@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 
 const productRoutes = require('./api/modules/products/product.routes');
 const userRoutes = require('./api/modules/user/user.routes');
+const { notFound, errorHandler } = require('./api/middleware/error-handler');
 
 mongoose.connect('mongodb+srv://admin:'+ 
     process.env.MONGO_ATLAS_PW +
@@ -52,19 +53,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok', host: os.hostname() })
 app.use('/products', productRoutes);
 app.use('/user', userRoutes);
 
-app.use((req,res,next) => {
-    const error = new Error('Not Found');
-    error.status = 404;
-    next(error);
-});
-
-app.use((error, req,res,next) => {
-    res.status(error.status || 500);
-    res.json({
-        error:{
-            message: error.message
-        }
-    });
-});
+app.use(notFound);
+app.use(errorHandler);
 
 module.exports = app;

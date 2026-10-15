@@ -52,7 +52,7 @@ async function fetchProducts() {
     return { ok: true, status: res.status, products: data.products || [] };
 }
 
-function renderProducts(listEl, products, { canManage, onOpen, onChanged, emptyText = 'No equipment found.' } = {}) {
+function renderProducts(listEl, products, { canManage, onOpen, onChanged, badge, emptyText = 'No equipment found.' } = {}) {
     listEl.innerHTML = '';
     if (!products.length) {
         listEl.innerHTML = `<p>${escapeHtml(emptyText)}</p>`;
@@ -65,6 +65,7 @@ function renderProducts(listEl, products, { canManage, onOpen, onChanged, emptyT
         card.tabIndex = 0;
         card.setAttribute('role', 'link');
         card.innerHTML = productCardHtml(p) + (manage ? manageActionsHtml(p) : '');
+        if (badge) card.querySelector('.info').insertAdjacentHTML('beforeend', badge(p));
         if (manage) bindManageActions(card, p, onChanged);
         card.addEventListener('click', e => {
             if (!e.target.closest('.actions')) onOpen(p);
@@ -76,43 +77,46 @@ function renderProducts(listEl, products, { canManage, onOpen, onChanged, emptyT
     });
 }
 
-function setupFilters(root, onChange, { category } = {}) {
-    const state = { category: category || 'All', search: '', availableOnly: false };
+function setupFilters(root, onChange, { category, statuses = [] } = {}) {
+    const state = { category: category || 'All', status: 'All', search: '', availableOnly: false };
     root.className = 'filters';
     root.innerHTML = `
         <div class="filter-row">
             <input type="search" class="search" placeholder="Search equipment..." aria-label="Search equipment">
-            <label class="check"><input type="checkbox"> Available only</label>
         </div>
-        <div class="chips" role="group" aria-label="Filter by category"></div>`;
-    const chipsEl = root.querySelector('.chips');
+        ${statuses.length ? '<div class="chips status-chips" role="group" aria-label="Filter by status"></div>' : ''}
+        <div class="chips category-chips" role="group" aria-label="Filter by category"></div>`;
+    const statusEl = root.querySelector('.status-chips');
+    const chipsEl = root.querySelector('.category-chips');
     let options = categoryOptions();
 
-    function renderChips() {
-        chipsEl.innerHTML = '';
-        ['All', ...options].forEach(name => {
+    // One row of chips. key is the state field the chips change
+    function renderGroup(el, names, key) {
+        el.innerHTML = '';
+        names.forEach(name => {
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = 'chip' + (sameText(name, state.category) ? ' active' : '');
+            chip.className = 'chip' + (sameText(name, state[key]) ? ' active' : '');
             chip.textContent = name;
             chip.addEventListener('click', () => {
-                state.category = name;
-                renderChips();
+                state[key] = name;
+                renderGroup(el, names, key);
                 onChange();
             });
-            chipsEl.appendChild(chip);
+            el.appendChild(chip);
         });
+    }
+
+    function renderChips() {
+        renderGroup(chipsEl, ['All', ...options], 'category');
     }
 
     root.querySelector('.search').addEventListener('input', e => {
         state.search = e.target.value;
         onChange();
     });
-    root.querySelector('.check input').addEventListener('change', e => {
-        state.availableOnly = e.target.checked;
-        onChange();
-    });
 
+    if (statusEl) renderGroup(statusEl, ['All', ...statuses], 'status');
     renderChips();
     return {
         state,

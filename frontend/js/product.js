@@ -37,8 +37,14 @@ function renderDetail(p) {
                     ${p.updatedAt ? `<dt>Last updated</dt><dd>${escapeHtml(formatDate(p.updatedAt))}</dd>` : ''}
                 </dl>
                 ${mine ? manageActionsHtml(p) : ''}
+                <div id="commentSection"></div>
             </div>
-        </div>`;
+        </div>
+        <div id="bookingSection" class="booking-section"></div>
+        <div id="paymentSection" class="booking-section"></div>`;
+    renderBookingSection(document.getElementById('bookingSection'), p, payload);
+    renderPaymentSection(document.getElementById('paymentSection'), p, payload);
+    renderCommentSection(document.getElementById('commentSection'), p, payload);
     if (mine) {
         bindManageActions(detailEl, p, change => {
             if (change === 'deleted') window.location.replace('browse.html');

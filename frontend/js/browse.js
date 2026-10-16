@@ -7,28 +7,19 @@ const listEl = document.getElementById('productList');
 const listTitle = document.getElementById('listTitle');
 const filtersEl = document.getElementById('filters');
 const addBtn = document.getElementById('addBtn');
-const tabsEl = document.getElementById('tabs');
 let products = [];
-let view = isHolder && !params.get('category') ? 'mine' : 'all';
+let bookings = [];
+const view = isHolder ? 'mine' : 'all';
 
-const filters = setupFilters(filtersEl, render, { category: params.get('category') });
+const STATUSES = ['Available', 'Booking requested', 'Booking accepted'];
+const filters = setupFilters(filtersEl, render, { category: params.get('category'), statuses: STATUSES });
 const isMine = p => isHolder && String(p.ownerId) === String(user.userId);
 
 if (isHolder) {
     addBtn.hidden = false;
-    tabsEl.hidden = false;
 }
 
 addBtn.addEventListener('click', () => openForm(null, loadProducts));
-
-tabsEl.querySelectorAll('button').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === view);
-    btn.addEventListener('click', () => {
-        view = btn.dataset.view;
-        tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-        render();
-    });
-});
 
 function openProduct(p) {
     const target = `product.html?id=${encodeURIComponent(p._id)}`;
@@ -36,13 +27,24 @@ function openProduct(p) {
     else promptLogin(target);
 }
 
+// Status chips: availability, or the user's own booking status for that item
+function matchesStatus(p) {
+    const status = filters.state.status;
+    const list = bookingsFor(bookings, p._id);
+    if (status === 'Available') return p.availability;
+    if (status === 'Booking requested') return list.some(b => b.booking_status === 'Requested');
+    if (status === 'Booking accepted') return list.some(b => b.booking_status === 'Accepted');
+    return true;
+}
+
 function render() {
     const base = view === 'mine' ? products.filter(isMine) : products;
     listTitle.textContent = view === 'mine' ? 'My Listings' : 'All Equipment';
-    renderProducts(listEl, filterProducts(base, filters.state), {
+    renderProducts(listEl, filterProducts(base, filters.state).filter(matchesStatus), {
         canManage: isMine,
         onOpen: openProduct,
         onChanged: loadProducts,
+        badge: p => bookingBadgeHtml(bookingsFor(bookings, p._id), isHolder),
         emptyText: view === 'mine' && !base.length ? 'Not listed anything yet.' : 'No equipment matches your search.'
     });
 }
@@ -60,6 +62,7 @@ async function loadProducts() {
         return;
     }
     products = result.products;
+    bookings = user ? await fetchBookings() : [];
     filters.setCategories(products);
     render();
 }

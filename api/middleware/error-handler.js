@@ -40,8 +40,11 @@ function toAppError(err) {
     return new InternalServerError();
 }
 
-// Unknown routes
+// Unknown routes. Browsers go back to the home page, API calls get a 404
 function notFound(req, res, next) {
+    if (req.method === 'GET' && (req.headers.accept || '').includes('text/html')) {
+        return res.redirect('/');
+    }
     next(new NotFoundError());
 }
 

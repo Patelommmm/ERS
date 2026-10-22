@@ -122,8 +122,8 @@ async function cancelBooking(id) {
 
 function bookingItemHtml(b, isHolder) {
     const who = isHolder
-        ? `<strong>${escapeHtml(b.renter?.name || 'Renter')}</strong> <span>${escapeHtml(b.renter?.email || '')}</span>`
-        : '';
+        ? `Renter: <strong>${escapeHtml(b.renter?.name || 'Renter')}</strong> <span>${escapeHtml(b.renter?.email || '')}</span>`
+        : `Holder: <strong>${escapeHtml(b.holder?.name || 'Holder')}</strong> <span>${escapeHtml(b.holder?.email || '')}</span>`;
     const buttons = isHolder
         ? (b.booking_status === 'Requested'
             ? '<button class="btn" data-status="Accepted">Accept</button><button class="btn btn-outline" data-status="Declined">Decline</button>'

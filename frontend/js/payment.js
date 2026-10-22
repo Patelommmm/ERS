@@ -108,8 +108,8 @@ async function sendPayment(e) {
 
 function paymentItemHtml(p, isHolder) {
     const who = isHolder
-        ? `<strong>${escapeHtml(p.renter?.name || 'Renter')}</strong> <span>${escapeHtml(p.renter?.email || '')}</span>`
-        : '';
+        ? `Renter: <strong>${escapeHtml(p.renter?.name || 'Renter')}</strong> <span>${escapeHtml(p.renter?.email || '')}</span>`
+        : `Holder: <strong>${escapeHtml(p.holder?.name || 'Holder')}</strong> <span>${escapeHtml(p.holder?.email || '')}</span>`;
     return `
         <div class="booking-item">
             <div>

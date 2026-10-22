@@ -35,6 +35,7 @@ const userRoutes = require('./api/modules/user/user.routes');
 const bookingRoutes = require('./api/modules/bookings/booking.routes');
 const commentRoutes = require('./api/modules/comments/comment.routes');
 const paymentRoutes = require('./api/modules/payments/payment.routes');
+
 const { notFound, errorHandler } = require('./api/middleware/error-handler');
 
 mongoose.connect('mongodb+srv://admin:'+ 
@@ -58,6 +59,7 @@ app.use('/user', userRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/comments', commentRoutes);
 app.use('/payments', paymentRoutes);
+app.use('/comments', commentRoutes);
 app.use(notFound);
 app.use(errorHandler);
 

@@ -55,7 +55,6 @@ exports.createComment = async (req, res) => {
 };
 
 exports.getProductComments = async (req, res) => {
-    renterOnly(req);
     const product = await findProduct(req.params.productId);
     const docs = await Comment.find({ productId: product._id }).populate(POPULATE).exec();
     res.status(200).json({

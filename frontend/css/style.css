@@ -512,6 +512,11 @@ body.app main {
   background: #000;
   color: #ffcc00;
 }
+.status-chips .chip.active {
+  background: #ffcc00;
+  color: #000;
+  border-color: #ffcc00;
+}
 .tabs {
   display: flex;
   gap: 6px;
@@ -553,11 +558,25 @@ body.app main {
 }
 
 .back-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   margin-bottom: 15px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  background: #fff;
   color: #000;
-  font-weight: bold;
   text-decoration: none;
+}
+.back-link:hover {
+  background: #ffcc00;
+  border-color: #ffcc00;
+}
+.back-link:focus-visible {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
 }
 .detail {
   display: flex;
@@ -609,6 +628,97 @@ body.app main {
   background: #fff;
   color: #000;
   border: 1px solid #000;
+}
+
+.booking-section {
+  max-width: 900px;
+  margin-top: 20px;
+}
+.booking-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.booking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+.booking-item p {
+  margin: 4px 0;
+}
+.card input[readonly] {
+  background: #f4f4f4;
+}
+.booking-section h3 {
+  margin: 16px 0 10px;
+}
+.card label {
+  display: block;
+  font-size: 0.85em;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.booking-status,
+.booking-badge {
+  display: inline-block;
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid #000;
+}
+.booking-badge {
+  margin-top: 6px;
+}
+.booking-status.pending,
+.booking-badge.pending {
+  background: #fff3cd;
+  border-color: #b8860b;
+  color: #7a5a00;
+}
+.booking-status.accepted,
+.booking-badge.accepted {
+  background: #e6f4ea;
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+.booking-status.declined,
+.booking-badge.declined {
+  background: #fdecea;
+  border-color: #c62828;
+  color: #c62828;
+}
+.alert {
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-weight: bold;
+  border: 1px solid;
+}
+.alert-pending {
+  background: #fff3cd;
+  border-color: #b8860b;
+  color: #7a5a00;
+}
+.alert-accepted {
+  background: #e6f4ea;
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+.alert-declined {
+  background: #fdecea;
+  border-color: #c62828;
+  color: #c62828;
 }
 
 @media (max-width: 600px) {
